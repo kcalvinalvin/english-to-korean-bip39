@@ -70,6 +70,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         function bytesToBinary(bytes) {
             return bytes.map((x) => lpad(x.toString(2), '0', 8)).join('');
         }
+        function toHexString(byteArray) {
+            return Array.from(byteArray, function(byte) {
+                return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+            }).join('')
+        }
         function hex2bin(hex){
             return (parseInt(hex, 16).toString(2)).padStart(8, '0');
         }
@@ -86,15 +91,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
             const msg = new Uint8Array(arr);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msg);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map((bytes) => bytes.toString(16).padStart(2, '0')).join('');
-            return hashHex;
+            return hashArray;
         }
         function deriveChecksumBits(entropyBuffer) {
             const ENT = entropyBuffer.length * 8;
             const CS = ENT / 32;
             return hash(entropyBuffer).then((x) => {
-                let x_array = Array.from(x);
-                const checksum = hex2bin(x).slice(0, CS);
+                const checksum = bytesToBinary(x).slice(0, CS);
                 return checksum;
             });
         }
@@ -119,13 +122,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
                     document.getElementById(target).value=err;
                     return;
             }
-            console.log("target_string",target_string);
 
             try {
                 verifyChecksum(str_array, sourceWordlist).then(res => {
                     document.getElementById(target).value=target_string;
                 }).catch(err => {
-                    console.log("err", err);
                     document.getElementById(target).value=err;
                 });
             }
